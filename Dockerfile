@@ -1,11 +1,16 @@
 FROM python:3.11-slim
 
-# Install PostgreSQL client for pg_isready
-RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+# Install system dependencies for PostgreSQL client and Playwright
+RUN apt-get update && \
+    apt-get install -y postgresql-client && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Install Playwright browsers (optimized for production)
+RUN playwright install --with-deps chromium
 
 COPY app ./app
 COPY config ./config
