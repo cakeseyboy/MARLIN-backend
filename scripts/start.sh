@@ -21,10 +21,13 @@ fi
 
 echo "✅ Database is ready!"
 
-# Run migrations
+# Run migrations (don't fail if migrations fail)
 echo "🔄 Running database migrations..."
-alembic upgrade head
-echo "✅ Migrations complete!"
+if alembic upgrade head; then
+    echo "✅ Migrations complete!"
+else
+    echo "⚠️  Warning: Migrations failed, but continuing startup..."
+fi
 
 # Start the application
 echo "🌐 Starting FastAPI application on 0.0.0.0:${PORT:-8000}..."
