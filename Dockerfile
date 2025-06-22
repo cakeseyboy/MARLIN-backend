@@ -2,8 +2,20 @@ FROM python:3.11-slim
 
 # Install system dependencies for PostgreSQL client and Playwright
 RUN apt-get update && \
-    apt-get install -y postgresql-client && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y \
+    postgresql-client \
+    curl \
+    wget \
+    gnupg \
+    libnss3 \
+    libxss1 \
+    libasound2 \
+    libxtst6 \
+    libxrandr2 \
+    libgtk-3-0 \
+    libxss1 \
+    libgconf-2-4 \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY requirements.txt .
