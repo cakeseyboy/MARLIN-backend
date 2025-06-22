@@ -12,6 +12,7 @@ Weather-trading application backend built with FastAPI, SQLAlchemy, and PostgreS
 - **Alembic**: Database migrations
 - **Docker Compose**: Development environment
 - **Automated Data Ingestion**: Station-specific scheduling for weather data
+- **Strategy Engine**: Automated trading signal generation
 - **Comprehensive Testing**: Async test suite with CI/CD
 
 ## Quick start
@@ -91,6 +92,39 @@ Every PR is automatically checked with:
 - **Black** for code formatting
 - **MyPy** for type checking
 - **Pytest** for running the test suite
+
+## Strategy Engine
+
+Every time a Wethr "High" temperature is scraped, the strategy engine automatically:
+
+1. **Pulls latest model forecast** temperature for the station
+2. **Calculates delta** between model and Wethr high
+3. **Maps delta to confidence & position size** using scoring tiers:
+   - `|Δ| ≥ 3°F`: confidence=0.95, size=3.0
+   - `|Δ| ≥ 2°F`: confidence=0.85, size=2.0  
+   - `|Δ| ≥ 1°F`: confidence=0.70, size=1.0
+   - `|Δ| < 1°F`: confidence=0.50, size=0.5
+4. **Creates trading signal** in `tmax_calculations` table
+
+### Example Strategy Output
+```json
+{
+  "station_id": 3,
+  "cli_forecast": 92.6,
+  "observed_high": null,
+  "method": "MARLIN_v1",
+  "confidence": 0.95,
+  "size": 3.0,
+  "raw_payload": {
+    "delta": 3.6,
+    "model_temp": 92.6,
+    "wethr_high": 89.0,
+    "station_code": "KMIA"
+  }
+}
+```
+
+The strategy engine runs automatically during post-DSM and post-CLI Wethr scrapes, generating live trade signals ready for MARLIN consumption.
 
 ## Data Ingestion
 

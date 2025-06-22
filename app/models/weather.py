@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, date
 from typing import Dict, Any
 
-from sqlalchemy import Integer, String, Float, ForeignKey, func, JSON
+from sqlalchemy import Integer, String, Float, ForeignKey, func, JSON, Date
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -25,6 +25,7 @@ class WeatherStation(Base):
     # Relationships
     tmax_calculations = relationship("TmaxCalculation", back_populates="station")
     forecasts = relationship("WeatherForecast", back_populates="station")
+    wethr_highs = relationship("WethrHigh", back_populates="station")
 
 
 class TmaxCalculation(Base):
@@ -33,8 +34,10 @@ class TmaxCalculation(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     station_id: Mapped[int] = mapped_column(Integer, ForeignKey("weather_stations.id"))
     cli_forecast: Mapped[float] = mapped_column(Float)
+    observed_high: Mapped[float | None] = mapped_column(Float, nullable=True)
     method: Mapped[str] = mapped_column(String(50))
-    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    confidence: Mapped[float] = mapped_column(Float)
+    size: Mapped[float] = mapped_column(Float, default=0)
     raw_payload: Mapped[Dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), default=func.now()
@@ -60,3 +63,16 @@ class WeatherForecast(Base):
 
     # Relationships
     station = relationship("WeatherStation", back_populates="forecasts")
+
+
+class WethrHigh(Base):
+    __tablename__ = "wethr_highs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    station_id: Mapped[int] = mapped_column(Integer, ForeignKey("weather_stations.id"))
+    date_iso: Mapped[str] = mapped_column(String(10))  # YYYY-MM-DD format
+    wethr_high: Mapped[float] = mapped_column(Float)
+    scraped_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True))
+
+    # Relationships
+    station = relationship("WeatherStation", back_populates="wethr_highs")

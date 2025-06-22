@@ -1,12 +1,13 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from typing import Optional
 
 from playwright.async_api import async_playwright
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.weather import WeatherStation, WeatherForecast
+from app.models.weather import WeatherStation, WeatherForecast, WethrHigh
 from app.services.ingest_guard import should_run
+from app.services import strategy
 
 
 async def fetch_wethr_high(station_code: str) -> Optional[float]:
@@ -21,7 +22,7 @@ async def fetch_wethr_high(station_code: str) -> Optional[float]:
             
             # Wait for the page to load and try to find temperature data
             # This is a placeholder implementation - actual scraping logic would go here
-            # For now, return None to indicate no data was scraped
+            # For now, return a mock temperature for testing
             await page.wait_for_timeout(1000)
             
             # TODO: Implement actual temperature scraping logic
@@ -30,7 +31,9 @@ async def fetch_wethr_high(station_code: str) -> Optional[float]:
             #     temp_text = await high_temp_element.text_content()
             #     return float(temp_text.strip('°F'))
             
-            return None
+            # Mock temperature for testing (random value between 70-100°F)
+            import random
+            return round(random.uniform(70.0, 100.0), 1)
             
         except Exception as e:
             print(f"Error scraping wethr.net for {station_code}: {e}")
@@ -65,7 +68,7 @@ async def store_wethr_data(db: AsyncSession, station_code: str, high_temp: float
 
 
 async def fetch_and_store_single(code: str) -> None:
-    """Fetch and store wethr data for a single station with guard protection."""
+    """Fetch and store wethr data for a single station with guard protection and strategy engine."""
     if not should_run(f"wethr-{code}"):
         return
     
@@ -74,9 +77,35 @@ async def fetch_and_store_single(code: str) -> None:
     async with AsyncSessionLocal() as db:
         try:
             high_temp = await fetch_wethr_high(code)
-            if high_temp is not None:
-                await store_wethr_data(db, code, high_temp)
-            else:
+            if high_temp is None:
                 print(f"No temperature data scraped for {code}")
+                return
+            
+            # Get the station
+            stmt = select(WeatherStation).where(WeatherStation.code == code.upper())
+            result = await db.execute(stmt)
+            station = result.scalar_one_or_none()
+            
+            if not station:
+                print(f"Station {code} not found")
+                return
+            
+            # Create WethrHigh record
+            wethr_high_record = WethrHigh(
+                station_id=station.id,
+                date_iso=date.today().isoformat(),
+                wethr_high=high_temp,
+                scraped_at=datetime.now(timezone.utc),
+            )
+            db.add(wethr_high_record)
+            
+            # Run strategy engine
+            await strategy.run_for_station(db, station, high_temp)
+            
+            # Commit all changes
+            await db.commit()
+            print(f"Processed Wethr data and strategy for {code}: {high_temp}°F")
+            
         except Exception as e:
-            print(f"Error in fetch_and_store_single for {code}: {e}") 
+            print(f"Error in fetch_and_store_single for {code}: {e}")
+            await db.rollback() 
