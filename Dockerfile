@@ -13,6 +13,7 @@ COPY alembic.ini .
 COPY alembic ./alembic
 COPY scripts/wait-for-db.sh ./scripts/wait-for-db.sh
 COPY scripts/init-db.py ./scripts/init-db.py
-RUN chmod +x ./scripts/wait-for-db.sh
+COPY scripts/start.sh ./scripts/start.sh
+RUN chmod +x ./scripts/wait-for-db.sh ./scripts/start.sh
 
-CMD bash scripts/wait-for-db.sh uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} 
+CMD ["./scripts/start.sh"] 
