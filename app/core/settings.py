@@ -14,7 +14,19 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    @property
+    def database_url(self) -> str:
+        return (
+            f"postgresql+asyncpg://{self.postgres_user}:"
+            f"{self.postgres_password}@{self.postgres_host}:"
+            f"{self.postgres_port}/{self.postgres_db}"
+        )
+
+    @property
+    def debug(self) -> bool:
+        return self.app_debug
+
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings() 
+    return Settings()

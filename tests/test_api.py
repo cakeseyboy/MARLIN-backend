@@ -98,7 +98,7 @@ async def test_tmax_crud(test_client):
         "cli_forecast": 78.5,
         "method": "MARLIN_v1",
         "confidence": 0.85,
-        "raw_payload": {"model": "GFS", "temp": 78.5, "humidity": 65}
+        "raw_payload": {"model": "GFS", "temp": 78.5, "humidity": 65},
     }
     r = await test_client.post("/tmax/", json=tmax_payload)
     assert r.status_code == 201
@@ -135,4 +135,4 @@ async def test_station_validation(test_client):
     # Test invalid station code (too long)
     invalid_payload["code"] = "TOOLONG"  # Too long
     r = await test_client.post("/stations/", json=invalid_payload)
-    assert r.status_code == 422 
+    assert r.status_code == 422

@@ -18,12 +18,14 @@ if config.config_file_name is not None:
 
 # Set the database URL from environment variables
 from app.core.settings import get_settings
+
 settings = get_settings()
 
-config.set_main_option("sqlalchemy.url", 
+config.set_main_option(
+    "sqlalchemy.url",
     f"postgresql+asyncpg://{settings.postgres_user}:"
     f"{settings.postgres_password}@{settings.postgres_host}:"
-    f"{settings.postgres_port}/{settings.postgres_db}"
+    f"{settings.postgres_port}/{settings.postgres_db}",
 )
 
 # add your model's MetaData object here
@@ -68,6 +70,7 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+
     async def do_run_migrations(connection):
         context.configure(
             connection=connection,
@@ -75,7 +78,7 @@ def run_migrations_online() -> None:
             compare_type=True,
             literal_binds=True,
         )
-        
+
         with context.begin_transaction():
             context.run_migrations()
 

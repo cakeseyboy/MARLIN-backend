@@ -1,5 +1,7 @@
 # MARLIN Backend (FastAPI)
 
+[![CI](https://github.com/yourusername/MARLIN-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/MARLIN-backend/actions/workflows/ci.yml)
+
 Self-contained service that exposes MARLIN's weather-trading logic via a REST/JSON interface.  
 Stack: **FastAPI + SQLAlchemy + Postgres**. Deployable on Fly.io.
 
@@ -49,6 +51,31 @@ curl -X POST localhost:8000/tmax/ \
   -H 'Content-Type: application/json' \
   -d '{"station_id":1,"cli_forecast":78.5,"method":"MARLIN_v1","confidence":0.85,"raw_payload":{"model":"GFS","temp":78.5}}'
 ```
+
+## Development
+
+### Install development dependencies
+```bash
+pip install -r requirements-dev.txt
+```
+
+### Code quality tools
+```bash
+# Format code
+black .
+
+# Type check
+mypy app
+
+# Run tests
+pytest
+```
+
+### CI Pipeline
+Every PR is automatically checked with:
+- **Black** for code formatting
+- **MyPy** for type checking
+- **Pytest** for running the test suite
 
 ## Testing
 
