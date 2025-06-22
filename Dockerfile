@@ -15,4 +15,4 @@ COPY scripts/wait-for-db.sh ./scripts/wait-for-db.sh
 COPY scripts/init-db.py ./scripts/init-db.py
 RUN chmod +x ./scripts/wait-for-db.sh
 
-CMD ["sh", "-c", "python scripts/init-db.py && uvicorn app.main:app --host 0.0.0.0 --port 8000"] 
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"] 
