@@ -1,28 +1,11 @@
 FROM python:3.11-slim
 
-# Install system dependencies for PostgreSQL client and Playwright
-RUN apt-get update && \
-    apt-get install -y \
-    postgresql-client \
-    curl \
-    wget \
-    gnupg \
-    libnss3 \
-    libxss1 \
-    libasound2 \
-    libxtst6 \
-    libxrandr2 \
-    libgtk-3-0 \
-    libxss1 \
-    libgconf-2-4 \
-    && rm -rf /var/lib/apt/lists/*
+# Install PostgreSQL client for pg_isready
+RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Install Playwright browsers (optimized for production)
-RUN playwright install --with-deps chromium
 
 COPY app ./app
 COPY config ./config
@@ -32,4 +15,4 @@ COPY scripts/wait-for-db.sh ./scripts/wait-for-db.sh
 COPY scripts/init-db.py ./scripts/init-db.py
 RUN chmod +x ./scripts/wait-for-db.sh
 
-CMD ["./scripts/wait-for-db.sh", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"] 
+CMD ["./scripts/wait-for-db.sh", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"] 
