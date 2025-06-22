@@ -59,6 +59,12 @@ app = FastAPI(
 app.include_router(router)
 
 
+@app.get("/")
+async def root() -> dict[str, str]:
+    """Root endpoint for Railway health checks."""
+    return {"status": "ok", "service": "MARLIN Weather API"}
+
+
 @app.get("/health")
 async def health() -> dict[str, str]:
     """Health check endpoint."""
