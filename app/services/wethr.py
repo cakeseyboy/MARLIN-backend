@@ -20,27 +20,48 @@ async def fetch_wethr_high(station_code: str) -> Optional[float]:
             await page.goto(url, timeout=30000)
             
             # Wait for the page to load and try to find temperature data
-            # This is a placeholder - actual selectors would need to be determined
-            # by inspecting the wethr.net site structure
-            await page.wait_for_timeout(2000)
+            # This is a placeholder implementation - actual scraping logic would go here
+            # For now, return None to indicate no data was scraped
+            await page.wait_for_timeout(1000)
             
-            # Example selector - would need to be updated based on actual site
-            temp_element = await page.query_selector(".temperature-high")
-            if temp_element:
-                temp_text = await temp_element.text_content()
-                if temp_text:
-                    # Extract numeric value from temperature string
-                    import re
-                    match = re.search(r'(\d+\.?\d*)', temp_text)
-                    if match:
-                        return float(match.group(1))
+            # TODO: Implement actual temperature scraping logic
+            # Example: high_temp_element = await page.query_selector('.high-temp')
+            # if high_temp_element:
+            #     temp_text = await high_temp_element.text_content()
+            #     return float(temp_text.strip('°F'))
             
             return None
+            
         except Exception as e:
-            print(f"Error fetching wethr data for {station_code}: {e}")
+            print(f"Error scraping wethr.net for {station_code}: {e}")
             return None
         finally:
             await browser.close()
+
+
+async def store_wethr_data(db: AsyncSession, station_code: str, high_temp: float) -> None:
+    """Store wethr.net data in the database."""
+    # Get the station
+    stmt = select(WeatherStation).where(WeatherStation.code == station_code.upper())
+    result = await db.execute(stmt)
+    station = result.scalar_one_or_none()
+    
+    if not station:
+        print(f"Station {station_code} not found")
+        return
+    
+    # Store the data
+    wf = WeatherForecast(
+        station_id=station.id,
+        source="Wethr",
+        forecast_time=datetime.now(timezone.utc),
+        valid_time=datetime.now(timezone.utc),
+        temperature=high_temp,
+        raw_data={"high_temperature": high_temp, "source": "wethr.net"},
+    )
+    db.add(wf)
+    await db.commit()
+    print(f"Stored Wethr data for {station_code}: {high_temp}°F")
 
 
 async def fetch_and_store_single(code: str) -> None:
@@ -51,30 +72,11 @@ async def fetch_and_store_single(code: str) -> None:
     from app.db.database import AsyncSessionLocal
     
     async with AsyncSessionLocal() as db:
-        # Get the station
-        stmt = select(WeatherStation).where(WeatherStation.code == code.upper())
-        result = await db.execute(stmt)
-        station = result.scalar_one_or_none()
-        
-        if not station:
-            print(f"Station {code} not found")
-            return
-        
-        # Fetch wethr data
-        high_temp = await fetch_wethr_high(code)
-        
-        if high_temp is not None:
-            # Store as a forecast record with wethr source
-            wf = WeatherForecast(
-                station_id=station.id,
-                source="Wethr",
-                forecast_time=datetime.now(timezone.utc),
-                valid_time=datetime.now(timezone.utc),
-                temperature=high_temp,
-                raw_data={"wethr_high": high_temp, "scraped_at": datetime.now(timezone.utc).isoformat()},
-            )
-            db.add(wf)
-            await db.commit()
-            print(f"Stored wethr high temp {high_temp}°F for {code}")
-        else:
-            print(f"Failed to fetch wethr data for {code}") 
+        try:
+            high_temp = await fetch_wethr_high(code)
+            if high_temp is not None:
+                await store_wethr_data(db, code, high_temp)
+            else:
+                print(f"No temperature data scraped for {code}")
+        except Exception as e:
+            print(f"Error in fetch_and_store_single for {code}: {e}") 

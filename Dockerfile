@@ -12,6 +12,7 @@ COPY config ./config
 COPY alembic.ini .
 COPY alembic ./alembic
 COPY scripts/wait-for-db.sh ./scripts/wait-for-db.sh
+COPY scripts/init-db.py ./scripts/init-db.py
 RUN chmod +x ./scripts/wait-for-db.sh
 
 CMD ["./scripts/wait-for-db.sh", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"] 
