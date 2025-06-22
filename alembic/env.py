@@ -1,8 +1,9 @@
 from logging.config import fileConfig
-from sqlalchemy import pool
+from sqlalchemy import pool, Connection
 from alembic import context
 import asyncio
 import os
+from typing import Any
 
 from app.db.database import engine
 from app.models import Base
@@ -71,7 +72,7 @@ def run_migrations_online() -> None:
 
     """
 
-    def do_run_migrations(connection):
+    def do_run_migrations(connection: Connection) -> None:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
@@ -82,7 +83,7 @@ def run_migrations_online() -> None:
         with context.begin_transaction():
             context.run_migrations()
 
-    async def run_async_migrations():
+    async def run_async_migrations() -> None:
         async with engine.begin() as connection:
             await connection.run_sync(do_run_migrations)
 
