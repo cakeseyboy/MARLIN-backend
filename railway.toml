@@ -1,0 +1,33 @@
+[build]
+builder = "DOCKERFILE"
+
+[deploy]
+startCommand = "bash scripts/wait-for-db.sh && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+
+[services.api]
+rootDirectory = "."
+internalPort  = 8000
+healthcheckPath = "/health"
+
+  [[services.api.env]]
+  key   = "POSTGRES_HOST"
+  value = "postgres.internal"
+
+  [[services.api.env]]
+  key   = "POSTGRES_PORT"
+  value = "5432"
+
+  [[services.api.env]]
+  key   = "POSTGRES_DB"
+  value = "marlin"
+
+  [[services.api.env]]
+  key   = "POSTGRES_USER"
+  value = "marlin"
+
+  [[services.api.env]]
+  key      = "POSTGRES_PASSWORD"
+  required = true
+
+[[plugins]]
+name = "postgres" 

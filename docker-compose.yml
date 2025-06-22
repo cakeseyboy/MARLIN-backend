@@ -15,7 +15,7 @@ services:
   api:
     build: .
     env_file:
-      - .env            # copy from .env.sample and tweak
+      - .env.docker
     depends_on:
       - db
     ports:

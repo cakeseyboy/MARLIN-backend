@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -6,7 +7,7 @@ class Settings(BaseSettings):
     app_env: str = "local"
     app_debug: bool = True
 
-    postgres_host: str = "localhost"
+    postgres_host: str = os.getenv("POSTGRES_HOST", "localhost")
     postgres_port: int = 5432
     postgres_db: str = "marlin"
     postgres_user: str = "marlin"

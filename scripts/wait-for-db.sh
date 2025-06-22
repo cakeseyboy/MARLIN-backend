@@ -7,7 +7,7 @@ until pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER"; do
 done
 
 echo "�� Postgres is ready! Initializing database..."
-python scripts/init-db.py
-echo "✅ Database initialization complete!"
+alembic upgrade head
+echo "✅ Database migrations complete!"
 
 exec "$@" 
