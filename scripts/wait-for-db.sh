@@ -14,8 +14,4 @@ if [ $TRIES -eq 0 ]; then
   exit 1
 fi
 
-echo "🚀 Postgres is ready! Running migrations..."
-alembic upgrade head
-echo "✅ Database migrations complete!"
-
-exec "$@"
+echo "🚀 Postgres is ready!"
