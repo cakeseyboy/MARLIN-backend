@@ -1,0 +1,35 @@
+KAUS:
+  pre_dsm: "21:07"
+  post_dsm: "21:19"
+  pre_cli: "06:07"
+  post_cli: "06:19"
+KLAX:
+  pre_dsm: "22:00"
+  post_dsm: "22:12"
+  pre_cli: "01:00"
+  post_cli: "01:12"
+KMDW:
+  pre_dsm: "20:07"
+  post_dsm: "20:19"
+  pre_cli: "05:07"
+  post_cli: "05:19"
+KDEN:
+  pre_dsm: "23:07"
+  post_dsm: "23:19"
+  pre_cli: "02:07"
+  post_cli: "02:19"
+KMIA:
+  pre_dsm: "19:07"
+  post_dsm: "19:19"
+  pre_cli: "04:07"
+  post_cli: "04:19"
+KNYC:
+  pre_dsm: "19:37"
+  post_dsm: "19:49"
+  pre_cli: "04:37"
+  post_cli: "04:49"
+KPHL:
+  pre_dsm: "19:37"
+  post_dsm: "19:49"
+  pre_cli: "04:37"
+  post_cli: "04:49" 

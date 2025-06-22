@@ -2,8 +2,17 @@
 
 [![CI](https://github.com/yourusername/MARLIN-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/MARLIN-backend/actions/workflows/ci.yml)
 
-Self-contained service that exposes MARLIN's weather-trading logic via a REST/JSON interface.  
-Stack: **FastAPI + SQLAlchemy + Postgres**. Deployable on Fly.io.
+Weather-trading application backend built with FastAPI, SQLAlchemy, and PostgreSQL. Exposes weather trading logic via REST/JSON interface.
+
+## Features
+
+- **FastAPI**: High-performance async web framework
+- **SQLAlchemy 2.0**: Modern async ORM with type safety
+- **PostgreSQL**: Robust database with JSON support
+- **Alembic**: Database migrations
+- **Docker Compose**: Development environment
+- **Automated Data Ingestion**: Station-specific scheduling for weather data
+- **Comprehensive Testing**: Async test suite with CI/CD
 
 ## Quick start
 
@@ -85,15 +94,45 @@ Every PR is automatically checked with:
 
 ## Data Ingestion
 
-The application automatically ingests weather data from Open-Meteo every hour at HH:15 UTC for all registered weather stations. Data is stored in the `weather_forecasts` table with full JSON payload preservation.
+The system automatically ingests weather data using station-specific timing windows optimized for DSM (Decision Support Matrix) and CLI (Command Line Interface) operations.
 
-### Automatic ingestion
-- **Schedule**: Every hour at 15 minutes past the hour (UTC)
-- **Source**: Open-Meteo API
-- **Data**: Hourly temperature forecasts with full API response
+### Station-Specific Scheduling
 
-### Manual ingestion
-Use the `/stations/ingest/{station_code}` endpoint to trigger data collection for a specific station on demand.
+Each weather station has four daily ingestion windows defined in `config/ingest_schedule.yml`:
+
+- **pre_dsm**: Model data fetch before DSM window
+- **post_dsm**: Wethr scrape after DSM window  
+- **pre_cli**: Model data fetch before CLI window
+- **post_cli**: Wethr scrape after CLI window
+
+Example for Austin (KAUS):
+```yaml
+KAUS:
+  pre_dsm: "21:07"    # 9:07 PM UTC - fetch models
+  post_dsm: "21:19"   # 9:19 PM UTC - scrape wethr
+  pre_cli: "06:07"    # 6:07 AM UTC - fetch models  
+  post_cli: "06:19"   # 6:19 AM UTC - scrape wethr
+```
+
+### Adjusting Ingest Windows
+
+Edit `config/ingest_schedule.yml` and restart the stack. Times are UTC; keep them quoted (`"22:12"`). Guard logic ensures we never hit a source more than once every 30 minutes.
+
+### Data Sources
+
+1. **Open-Meteo API**: Numerical weather models (HRRR, GFS, ECMWF)
+2. **Wethr.net**: Scraped temperature data via Playwright
+
+### Manual Data Ingestion
+
+Trigger ingestion for specific stations:
+
+```bash
+# Ingest Open-Meteo data for Austin
+curl -X POST "http://localhost:8000/stations/ingest/KAUS"
+
+# Response: {"status": "queued"}
+```
 
 ## Testing
 

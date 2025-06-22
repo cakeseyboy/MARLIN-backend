@@ -1,46 +1,65 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler  # type: ignore
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 
-from app.api.routes import router as station_router
-from app.db.database import get_db
-from app.services.ingest import ingest_all
+from app.api.routes import router
+from app.core.schedule_loader import load_station_times
+from app.services.ingest import fetch_forecast_single
+from app.services.wethr import fetch_and_store_single
 
-# Global scheduler instance
 scheduler = AsyncIOScheduler()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Manage application lifespan - start/stop scheduler."""
-    # Start scheduler
-    scheduler.add_job(
-        ingest_all_wrapper,
-        "cron",
-        minute="15",  # every hour at HH:15 UTC
-        misfire_grace_time=180,
-    )
+    """Manage application lifespan with scheduler."""
+    # Load station timing configuration
+    station_times = load_station_times()
+    
+    # Schedule jobs for each station
+    for code, times in station_times.items():
+        pre_dsm, post_dsm, pre_cli, post_cli = times
+        
+        # Schedule model fetches (pre_dsm and pre_cli)
+        for t in (pre_dsm, pre_cli):
+            h, m = map(int, t.split(":"))
+            scheduler.add_job(
+                fetch_forecast_single,
+                "cron",
+                hour=h, minute=m, timezone="UTC",
+                args=[code], name=f"{code}-model-{t}",
+                misfire_grace_time=180, coalesce=True,
+            )
+        
+        # Schedule wethr scrapes (post_dsm and post_cli)
+        for t in (post_dsm, post_cli):
+            h, m = map(int, t.split(":"))
+            scheduler.add_job(
+                fetch_and_store_single,
+                "cron",
+                hour=h, minute=m, timezone="UTC",
+                args=[code], name=f"{code}-wethr-{t}",
+                misfire_grace_time=180, coalesce=True,
+            )
+    
     scheduler.start()
     yield
-    # Stop scheduler
     scheduler.shutdown()
 
 
-async def ingest_all_wrapper() -> None:
-    """Wrapper to provide database session to ingest_all."""
-    from app.db.database import AsyncSessionLocal
+app = FastAPI(
+    title="MARLIN Weather API",
+    description="Weather trading backend with FastAPI + SQLAlchemy + Postgres",
+    version="0.1.0",
+    lifespan=lifespan,
+)
 
-    async with AsyncSessionLocal() as session:
-        await ingest_all(session)
-
-
-app = FastAPI(title="MARLIN API", version="0.1.0", lifespan=lifespan)
-
-app.include_router(station_router)
+app.include_router(router)
 
 
-@app.get("/health", tags=["meta"])
+@app.get("/health")
 async def health() -> dict[str, str]:
+    """Health check endpoint."""
     return {"status": "ok"}
