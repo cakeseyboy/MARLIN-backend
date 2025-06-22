@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 set -e
 
-# Extract connection details from DATABASE_URL if available
+# Simple approach: start the app directly if DATABASE_URL is available
+# Railway handles service connections automatically
 if [ -n "$DATABASE_URL" ]; then
-    # Parse DATABASE_URL (format: postgres://user:pass@host:port/db)
-    export POSTGRES_HOST=$(echo $DATABASE_URL | sed -n 's/.*@\([^:]*\):.*/\1/p')
-    export POSTGRES_PORT=$(echo $DATABASE_URL | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
-    export POSTGRES_USER=$(echo $DATABASE_URL | sed -n 's/.*:\/\/\([^:]*\):.*/\1/p')
-    export POSTGRES_DB=$(echo $DATABASE_URL | sed -n 's/.*\/\([^?]*\).*/\1/p')
+    echo "🔗 Found DATABASE_URL, starting application directly..."
+    echo "🚀 Running database initialization..."
+    python scripts/init-db.py
+    echo "✅ Database initialization complete!"
+    exec "$@"
 fi
 
-# Default values if not set
+# Fallback for local development with individual env vars
 export POSTGRES_HOST=${POSTGRES_HOST:-localhost}
 export POSTGRES_PORT=${POSTGRES_PORT:-5432}
 export POSTGRES_USER=${POSTGRES_USER:-marlin}
@@ -20,7 +21,6 @@ echo "🔗 Connecting to PostgreSQL at $POSTGRES_HOST:$POSTGRES_PORT..."
 
 until pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER"; do
   echo "⏳ waiting for Postgres…"
-  echo ": - no response"
   sleep 1
 done
 
