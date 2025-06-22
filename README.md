@@ -6,6 +6,7 @@ Stack: **FastAPI + SQLAlchemy + Postgres**. Deployable on Fly.io.
 ## Quick start
 
 ```bash
+cp .env.sample .env      # configure creds
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ``` 
