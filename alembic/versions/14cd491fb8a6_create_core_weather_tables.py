@@ -42,7 +42,7 @@ def upgrade() -> None:
         sa.Column('method', sa.String(32), nullable=False),
         sa.Column('confidence', sa.Float(), nullable=False),
         sa.Column('raw_payload', sa.JSON(), nullable=False),
-        sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=False),
     )
     
     # Create weather_forecasts table

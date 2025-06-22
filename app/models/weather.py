@@ -1,5 +1,6 @@
 from sqlalchemy import String, Float, Integer, JSON, TIMESTAMP, text
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql import func
 from datetime import datetime
 from app.models import Base
 
@@ -26,7 +27,7 @@ class TmaxCalculation(Base):
     method: Mapped[str] = mapped_column(String(32))
     confidence: Mapped[float] = mapped_column(Float)
     raw_payload: Mapped[dict] = mapped_column(JSON)
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=text("now()"))
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=func.now())
 
 
 class WeatherForecast(Base):
