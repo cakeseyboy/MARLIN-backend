@@ -100,7 +100,7 @@ async def test_tmax_crud(test_client):
         "confidence": 0.85,
         "raw_payload": {"model": "GFS", "temp": 78.5, "humidity": 65},
     }
-    r = await test_client.post("/tmax/", json=tmax_payload)
+    r = await test_client.post("/stations/tmax/", json=tmax_payload)
     assert r.status_code == 201
     tmax_data = r.json()
     assert tmax_data["station_id"] == station_id
@@ -110,7 +110,7 @@ async def test_tmax_crud(test_client):
     assert "created_at" in tmax_data
 
     # List tmax calculations for the station
-    r = await test_client.get(f"/tmax/station/{station_id}")
+    r = await test_client.get(f"/stations/tmax/station/{station_id}")
     assert r.status_code == 200
     calculations = r.json()
     assert len(calculations) == 1

@@ -47,9 +47,15 @@ curl localhost:8000/stations/{station_id}
 
 ### Create a temperature calculation
 ```bash
-curl -X POST localhost:8000/tmax/ \
+curl -X POST localhost:8000/stations/tmax/ \
   -H 'Content-Type: application/json' \
   -d '{"station_id":1,"cli_forecast":78.5,"method":"MARLIN_v1","confidence":0.85,"raw_payload":{"model":"GFS","temp":78.5}}'
+```
+
+### Manual data ingestion
+```bash
+# Trigger data ingestion for a specific station
+curl -X POST localhost:8000/stations/ingest/KLAX
 ```
 
 ## Development
@@ -76,6 +82,18 @@ Every PR is automatically checked with:
 - **Black** for code formatting
 - **MyPy** for type checking
 - **Pytest** for running the test suite
+
+## Data Ingestion
+
+The application automatically ingests weather data from Open-Meteo every hour at HH:15 UTC for all registered weather stations. Data is stored in the `weather_forecasts` table with full JSON payload preservation.
+
+### Automatic ingestion
+- **Schedule**: Every hour at 15 minutes past the hour (UTC)
+- **Source**: Open-Meteo API
+- **Data**: Hourly temperature forecasts with full API response
+
+### Manual ingestion
+Use the `/stations/ingest/{station_code}` endpoint to trigger data collection for a specific station on demand.
 
 ## Testing
 
