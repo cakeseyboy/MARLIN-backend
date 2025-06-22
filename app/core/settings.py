@@ -7,9 +7,6 @@ class Settings(BaseSettings):
     app_env: str = "local"
     app_debug: bool = True
 
-    # Railway provides DATABASE_URL automatically, fall back to individual vars
-    database_url_raw: str = os.getenv("DATABASE_URL", "")
-    
     postgres_host: str = os.getenv("POSTGRES_HOST", "localhost")
     postgres_port: int = 5432
     postgres_db: str = "marlin"
@@ -20,15 +17,19 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> str:
-        # Use Railway's DATABASE_URL if available, otherwise construct from individual vars
-        if self.database_url_raw:
-            # Convert postgres:// to postgresql+asyncpg:// for SQLAlchemy async
-            return self.database_url_raw.replace("postgres://", "postgresql+asyncpg://", 1)
-        return (
-            f"postgresql+asyncpg://{self.postgres_user}:"
-            f"{self.postgres_password}@{self.postgres_host}:"
-            f"{self.postgres_port}/{self.postgres_db}"
-        )
+        # Use Railway's DATABASE_URL if available
+        db_url = os.getenv("DATABASE_URL")
+        if db_url and db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+        
+        if db_url:
+            return db_url
+        else:
+            return (
+                f"postgresql+asyncpg://{self.postgres_user}:"
+                f"{self.postgres_password}@{self.postgres_host}:"
+                f"{self.postgres_port}/{self.postgres_db}"
+            )
 
     @property
     def debug(self) -> bool:

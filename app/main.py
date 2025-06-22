@@ -15,24 +15,6 @@ scheduler = AsyncIOScheduler()
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Manage application lifespan with scheduler."""
-    # Initialize database
-    try:
-        from app.models import Base
-        from app.core.settings import get_settings
-        from sqlalchemy.ext.asyncio import create_async_engine
-        from sqlalchemy import text
-        
-        settings = get_settings()
-        engine = create_async_engine(settings.database_url)
-        
-        async with engine.begin() as conn:
-            print("🗄️  Creating database tables...")
-            await conn.run_sync(Base.metadata.create_all)
-            print("✅ Database initialized successfully!")
-    except Exception as e:
-        print(f"⚠️  Database initialization failed: {e}")
-        print("🔄 Application will continue, database will be retried on first request")
-    
     # Load station timing configuration
     station_times = load_station_times()
     
